@@ -2,3 +2,4 @@
 101,Catherine Alvord,03/21/1999,Animatronics,4.0
 102,Joe Schmo,01/01/2000,Mathematics,2.0
 103,John Doe,12/12/2012,Basket Weaving,3.0
+104,Pickle,05/15/2022,Birdwatching,2.7

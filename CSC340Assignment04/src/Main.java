@@ -11,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) {
         int choice = 0;
-        while (choice != 5) {
+        while (choice != 6) {
             cleanFile();
             choice = displayMenu();
             doCommand(choice);
@@ -21,6 +21,7 @@ public class Main {
 
     /**
      * Display list of choices for user
+     *
      * @return the int code of selected user choice
      */
     public static int displayMenu() {
@@ -29,16 +30,18 @@ public class Main {
                 This is a database of imaginary students who go to The University of Collegiate Studies.
                 Would you like to:
                 1. Create a new student.
-                2. Query for a student.
+                2. Find and print a student.
                 3. Update a student's info.
                 4. Delete a student.
-                5. Quit.
-                Please enter your choice (1-5).""");
+                5. Print all students.
+                6. Quit.
+                Please enter your choice (1-6).""");
         return in.nextInt();
     }
 
     /**
      * Performs appropriate command based on choice
+     *
      * @param choice int code based on displayMenu()
      */
     public static void doCommand(int choice) {
@@ -66,6 +69,9 @@ public class Main {
                 deleteStudent(id);
                 break;
             case 5:
+                printAllStudents();
+                break;
+            case 6:
                 System.out.println("Goodbye!");
                 break;
             default:
@@ -87,6 +93,11 @@ public class Main {
         System.out.println("Students have an ID, name, date of birth, major, and GPA.");
         System.out.println("Please enter the student's ID.");
         int id = in.nextInt();
+
+        while (id < 0) {
+            System.out.println("ID must be positive. Please re-enter.");
+            id = in.nextInt();
+        }
 
         while (studentExists(id)) {
             System.out.println("Student with id " + id + " already exists. Please re-enter.");
@@ -110,6 +121,10 @@ public class Main {
      * Find student by ID and print out the data
      */
     public static void findStudent(int id) {
+        if (id < 0) {
+            System.out.println("ID must be positive.");
+            return;
+        }
         try {
             List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
             for (String line : fileContent) {
@@ -128,10 +143,14 @@ public class Main {
 
     /**
      * Helper function to see if student with ID exists.
+     *
      * @param id ID to search for
      * @return true or false
      */
-    private static boolean studentExists(int id) {
+    public static boolean studentExists(int id) {
+        if (id < 0) {
+            return false;
+        }
         boolean found = false;
         try {
             List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
@@ -152,6 +171,10 @@ public class Main {
      * Update student by ID.
      */
     public static void updateStudent(int id) {
+        if (id < 0) {
+            System.out.println("ID must be positive.");
+            return;
+        }
         try {
             String data = id + ",";
             data += getStudentData();
@@ -168,9 +191,9 @@ public class Main {
                 }
             }
 
-            if(found) {
+            if (found) {
                 Files.write(PATH, fileContent, StandardCharsets.UTF_8);
-                System.out.printf("Student with ID %d updated.", id);
+                System.out.printf("Student with ID %d updated.\n", id);
             } else {
                 System.out.printf("Student with ID %d not found.\n", id);
             }
@@ -183,6 +206,10 @@ public class Main {
      * Delete student by ID.
      */
     public static void deleteStudent(int id) {
+        if (id < 0) {
+            System.out.println("ID must be positive.");
+            return;
+        }
         try {
             List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
             boolean found = false;
@@ -195,7 +222,7 @@ public class Main {
                     break;
                 }
             }
-            if(found) {
+            if (found) {
                 Files.write(PATH, fileContent, StandardCharsets.UTF_8);
                 System.out.printf("Student with ID %d deleted\n.", id);
             } else {
@@ -228,6 +255,7 @@ public class Main {
 
     /**
      * Helper function to read in data for a student (assumes ID has already been read)
+     *
      * @return String with student data
      */
     public static String getStudentData() {
@@ -246,4 +274,24 @@ public class Main {
         data += gpa + "\n";
         return data;
     }
+
+    /**
+     * Print all students in a formatted table.
+     */
+    public static void printAllStudents() {
+        try {
+            List<String> fileContents = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
+            System.out.println("""
+                    Student Database:
+                    ---------------------------------------------------------------------------------------""");
+            System.out.printf("%-10s%-20s%-20s%-20s%-20s\n", "ID", "Name", "Date of Birth", "Major", "GPA");
+            for (String line : fileContents) {
+                String[] data = line.split(",");
+                System.out.printf("%-10s%-20s%-20s%-20s%-20s\n", data[0], data[1], data[2], data[3], data[4]);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
