@@ -1,5 +1,11 @@
-100,Derek Fox,02/26/2001,Computer Science,3.9
-101,Catherine Alvord,03/21/1999,Animatronics,4.0
-102,Joe Schmo,01/01/2000,Mathematics,2.0
-103,John Doe,12/12/2012,Basket Weaving,3.0
-104,Pickle,05/15/2022,Birdwatching,2.7
+101,Derek Fox,2001-02-26,Computer Science,4.0
+102,Emily Johnson,1998-09-28,Biology,2.2
+103,Michael Brown,1997-07-15,Engineering,3.9
+104,Sarah Davis,1996-12-03,Psychology,1.7
+105,David Wilson,1999-02-20,Business,3.8
+106,Jessica Lee,1994-11-08,History,3.1
+107,Andrew Miller,1997-05-14,Chemistry,2.6
+108,Olivia Taylor,1998-03-25,Mathematics,3.4
+109,Daniel Martinez,1995-08-09,English,3.3
+110,Sophia Garcia,1996-06-17,Music,3.0
+111,James Rodriguez,1999-01-01,Physics,1.5

@@ -16,7 +16,7 @@ public class Main {
             choice = displayMenu();
             doCommand(choice);
         }
-
+        cleanFile(); //clean file one last time before exiting
     }
 
     /**
@@ -75,7 +75,7 @@ public class Main {
                 System.out.println("Goodbye!");
                 break;
             default:
-                System.out.println("Invalid input");
+                System.out.println("Invalid input.");
         }
     }
 
@@ -130,7 +130,15 @@ public class Main {
             for (String line : fileContent) {
                 String idString = line.substring(0, line.indexOf(","));
                 if (Integer.parseInt(idString) == id) {
-                    System.out.println("Student data: " + line);
+                    String[] data = line.split(",");
+                    System.out.printf("""
+                            ---------------------------------------------------------------------------------------
+                            ID: %s
+                            Name: %s
+                            Date of Birth: %s
+                            Major: %s
+                            GPA: %s
+                            """, data[0], data[1], data[2], data[3], data[4]);
                     return;
                 }
             }
@@ -175,25 +183,48 @@ public class Main {
             System.out.println("ID must be positive.");
             return;
         }
-        try {
-            String data = id + ",";
-            data += getStudentData();
 
+        try {
             List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
             boolean found = false;
+            boolean updated = false;
+
             for (int i = 0; i < fileContent.size(); i++) {
                 String line = fileContent.get(i);
                 String idString = line.substring(0, line.indexOf(","));
                 if (Integer.parseInt(idString) == id) {
                     found = true;
-                    fileContent.set(i, data);
+                    String[] oldData = line.split(",");
+                    String data = id + ",";
+                    data += getStudentData();
+                    String[] newData = data.split(",");
+
+                    System.out.println("About to perform the following update:");
+                    System.out.printf("""
+                            ---------------------------------------------------------------------------
+                            | %-14s| %-27s| %-27s|
+                            ---------------------------------------------------------------------------
+                            """, "Field", "Old Value", "New Value");
+                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Name", oldData[1], newData[1]);
+                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Date of Birth", oldData[2], newData[2]);
+                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Major", oldData[3], newData[3]);
+                    System.out.printf("| %-14s| %-27s| %-27s|\n", "GPA", oldData[4], newData[4].substring(0, newData[4].length() - 1)); //remove newline
+                    System.out.println("Are you sure you want to perform this update? (y/n)");
+                    String choice = in.nextLine();
+
+                    if (choice.equals("y")) {
+                        updated = true;
+                        fileContent.set(i, data);
+                    }
                     break;
                 }
             }
 
-            if (found) {
+            if (found && updated) {
                 Files.write(PATH, fileContent, StandardCharsets.UTF_8);
                 System.out.printf("Student with ID %d updated.\n", id);
+            } else if (found && !updated) {
+                System.out.printf("Student with ID %d not updated.\n", id);
             } else {
                 System.out.printf("Student with ID %d not found.\n", id);
             }
@@ -213,18 +244,41 @@ public class Main {
         try {
             List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
             boolean found = false;
+            boolean deleted = false;
+
             for (int i = 0; i < fileContent.size(); i++) {
                 String line = fileContent.get(i);
                 String idString = line.substring(0, line.indexOf(","));
                 if (Integer.parseInt(idString) == id) {
                     found = true;
-                    fileContent.remove(i);
+                    String[] data = line.split(",");
+
+                    System.out.println("About to delete the following student:");
+                    System.out.printf("""
+                            ---------------------------------------------------------------------------------------
+                            ID: %s
+                            Name: %s
+                            Date of Birth: %s
+                            Major: %s
+                            GPA: %s
+                            """, data[0], data[1], data[2], data[3], data[4]);
+
+                    System.out.println("Are you sure you want to delete this student? (y/n)");
+                    String choice = in.nextLine();
+
+                    if (choice.equals("y")) {
+                        deleted = true;
+                        fileContent.remove(i);
+                    }
                     break;
                 }
             }
-            if (found) {
+
+            if (found && deleted) {
                 Files.write(PATH, fileContent, StandardCharsets.UTF_8);
                 System.out.printf("Student with ID %d deleted\n.", id);
+            } else if (found && !deleted) {
+                System.out.printf("Student with ID %d not deleted.\n", id);
             } else {
                 System.out.printf("Student with ID %d not found.\n", id);
             }
@@ -271,6 +325,11 @@ public class Main {
         data += major + ",";
         System.out.println("Please enter the student's GPA.");
         double gpa = in.nextDouble();
+        while (gpa < 0 || gpa > 4) {
+            System.out.println("GPA must be between 0 and 4. Please re-enter.");
+            gpa = in.nextDouble();
+        }
+        in.nextLine(); //consume newline
         data += gpa + "\n";
         return data;
     }
