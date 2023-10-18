@@ -1,30 +1,33 @@
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
+    static final int CREATE = 1;
+    static final int FIND = 2;
+    static final int UPDATE = 3;
+    static final int DELETE = 4;
+    static final int PRINT = 5;
+    static final int QUIT = 6;
 
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
         StudentDataHandler dataHandler = new StudentDataHandler("src/students.txt", in);
+
         int choice = 0;
         while (choice != 6) {
             dataHandler.cleanFile();
             displayMenu();
             choice = in.nextInt();
             in.nextLine(); //consume newline
-            doCommand(choice, dataHandler);
+            doCommand(choice, dataHandler, in);
         }
+
         dataHandler.cleanFile(); //clean file one last time before exiting
     }
 
     /**
      * Display list of choices for user
-     * @return the int code of selected user choice
      */
-    public static void displayMenu() {
+    private static void displayMenu() {
         System.out.println("""
                 ---------------------------------------------------------------------------------------
                 This is a database of imaginary students who go to The University of Collegiate Studies.
@@ -40,36 +43,63 @@ public class Main {
 
     /**
      * Performs appropriate command based on choice
-     * @param choice int code based on displayMenu()
+     *
+     * @param choice      int code based on displayMenu()
+     * @param dataHandler StudentDataHandler object to perform commands on
      */
-    public static void doCommand(int choice, StudentDataHandler dataHandler) {
+    private static void doCommand(int choice, StudentDataHandler dataHandler, Scanner in) {
         int id;
         switch (choice) {
-            case 1:
-                dataHandler.newStudent();
+            case CREATE:
+                System.out.println("Students have an ID, name, date of birth, major, and GPA.");
+                System.out.println("Please enter the student's ID.");
+                id = in.nextInt();
+                in.nextLine(); //consume newline
+                try {
+                    dataHandler.createStudent(id);
+                    System.out.println("Student created.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
                 break;
-            case 2:
+            case FIND:
                 System.out.println("Please enter the student's ID to find.");
-                id = dataHandler.in.nextInt();
-                dataHandler.in.nextLine(); //consume newline
-                dataHandler.findStudent(id);
+                id = in.nextInt();
+                in.nextLine(); //consume newline
+                try {
+                    String studentData = dataHandler.findStudent(id);
+                    System.out.print(studentData);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
                 break;
-            case 3:
+            case UPDATE:
                 System.out.println("Please enter the student's ID to update.");
-                id = dataHandler.in.nextInt();
-                dataHandler.in.nextLine(); //consume newline
-                dataHandler.updateStudent(id);
+                id = in.nextInt();
+                in.nextLine(); //consume newline
+                try {
+                    String message = dataHandler.updateStudent(id);
+                    System.out.print(message);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
                 break;
-            case 4:
+            case DELETE:
                 System.out.println("Please enter the student's ID to delete.");
-                id = dataHandler.in.nextInt();
-                dataHandler.in.nextLine(); //consume newline
-                dataHandler.deleteStudent(id);
+                id = in.nextInt();
+                in.nextLine(); //consume newline
+                try {
+                    String message = dataHandler.deleteStudent(id);
+                    System.out.print(message);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
                 break;
-            case 5:
-                dataHandler.printAllStudents();
+            case PRINT:
+                String response = dataHandler.getAllStudents();
+                System.out.print(response);
                 break;
-            case 6:
+            case QUIT:
                 System.out.println("Goodbye!");
                 break;
             default:
@@ -77,4 +107,4 @@ public class Main {
         }
     }
 
-    }
+}
