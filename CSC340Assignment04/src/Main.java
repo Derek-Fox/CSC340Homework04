@@ -5,26 +5,26 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
-    static final String PATH_STRING = "./src/students.txt";
-    static final Path PATH = Path.of(PATH_STRING);
-    static final Scanner in = new Scanner(System.in);
 
     public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        StudentDataHandler dataHandler = new StudentDataHandler("src/students.txt", in);
         int choice = 0;
         while (choice != 6) {
-            cleanFile();
-            choice = displayMenu();
-            doCommand(choice);
+            dataHandler.cleanFile();
+            displayMenu();
+            choice = in.nextInt();
+            in.nextLine(); //consume newline
+            doCommand(choice, dataHandler);
         }
-        cleanFile(); //clean file one last time before exiting
+        dataHandler.cleanFile(); //clean file one last time before exiting
     }
 
     /**
      * Display list of choices for user
-     *
      * @return the int code of selected user choice
      */
-    public static int displayMenu() {
+    public static void displayMenu() {
         System.out.println("""
                 ---------------------------------------------------------------------------------------
                 This is a database of imaginary students who go to The University of Collegiate Studies.
@@ -36,40 +36,38 @@ public class Main {
                 5. Print all students.
                 6. Quit.
                 Please enter your choice (1-6).""");
-        return in.nextInt();
     }
 
     /**
      * Performs appropriate command based on choice
-     *
      * @param choice int code based on displayMenu()
      */
-    public static void doCommand(int choice) {
+    public static void doCommand(int choice, StudentDataHandler dataHandler) {
         int id;
         switch (choice) {
             case 1:
-                newStudent();
+                dataHandler.newStudent();
                 break;
             case 2:
                 System.out.println("Please enter the student's ID to find.");
-                id = in.nextInt();
-                in.nextLine(); //consume newline
-                findStudent(id);
+                id = dataHandler.in.nextInt();
+                dataHandler.in.nextLine(); //consume newline
+                dataHandler.findStudent(id);
                 break;
             case 3:
                 System.out.println("Please enter the student's ID to update.");
-                id = in.nextInt();
-                in.nextLine(); //consume newline
-                updateStudent(id);
+                id = dataHandler.in.nextInt();
+                dataHandler.in.nextLine(); //consume newline
+                dataHandler.updateStudent(id);
                 break;
             case 4:
                 System.out.println("Please enter the student's ID to delete.");
-                id = in.nextInt();
-                in.nextLine(); //consume newline
-                deleteStudent(id);
+                id = dataHandler.in.nextInt();
+                dataHandler.in.nextLine(); //consume newline
+                dataHandler.deleteStudent(id);
                 break;
             case 5:
-                printAllStudents();
+                dataHandler.printAllStudents();
                 break;
             case 6:
                 System.out.println("Goodbye!");
@@ -79,278 +77,4 @@ public class Main {
         }
     }
 
-    /**
-     * Create a new student and write to file.
-     */
-    public static void newStudent() {
-        BufferedWriter w;
-        try {
-            w = new BufferedWriter(new FileWriter(PATH_STRING, true));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println("Students have an ID, name, date of birth, major, and GPA.");
-        System.out.println("Please enter the student's ID.");
-        int id = in.nextInt();
-
-        while (id < 0) {
-            System.out.println("ID must be positive. Please re-enter.");
-            id = in.nextInt();
-        }
-
-        while (studentExists(id)) {
-            System.out.println("Student with id " + id + " already exists. Please re-enter.");
-            id = in.nextInt();
-        }
-        in.nextLine(); //consume newline
-
-        String data = id + ",";
-        data += getStudentData();
-        try {
-            w.write(data);
-            w.flush();
-            w.close();
-            System.out.println("New student created!");
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
     }
-
-    /**
-     * Find student by ID and print out the data
-     */
-    public static void findStudent(int id) {
-        if (id < 0) {
-            System.out.println("ID must be positive.");
-            return;
-        }
-        try {
-            List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            for (String line : fileContent) {
-                String idString = line.substring(0, line.indexOf(","));
-                if (Integer.parseInt(idString) == id) {
-                    String[] data = line.split(",");
-                    System.out.printf("""
-                            ---------------------------------------------------------------------------------------
-                            ID: %s
-                            Name: %s
-                            Date of Birth: %s
-                            Major: %s
-                            GPA: %s
-                            """, data[0], data[1], data[2], data[3], data[4]);
-                    return;
-                }
-            }
-
-            System.out.printf("Student with id %d not found.\n", id);
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-    }
-
-    /**
-     * Helper function to see if student with ID exists.
-     *
-     * @param id ID to search for
-     * @return true or false
-     */
-    public static boolean studentExists(int id) {
-        if (id < 0) {
-            return false;
-        }
-        boolean found = false;
-        try {
-            List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            for (String line : fileContent) {
-                String idString = line.substring(0, line.indexOf(","));
-                if (Integer.parseInt(idString) == id) {
-                    found = true;
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-        return found;
-    }
-
-    /**
-     * Update student by ID.
-     */
-    public static void updateStudent(int id) {
-        if (id < 0) {
-            System.out.println("ID must be positive.");
-            return;
-        }
-
-        try {
-            List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            boolean found = false;
-            boolean updated = false;
-
-            for (int i = 0; i < fileContent.size(); i++) {
-                String line = fileContent.get(i);
-                String idString = line.substring(0, line.indexOf(","));
-                if (Integer.parseInt(idString) == id) {
-                    found = true;
-                    String[] oldData = line.split(",");
-                    String data = id + ",";
-                    data += getStudentData();
-                    String[] newData = data.split(",");
-
-                    System.out.println("About to perform the following update:");
-                    System.out.printf("""
-                            ---------------------------------------------------------------------------
-                            | %-14s| %-27s| %-27s|
-                            ---------------------------------------------------------------------------
-                            """, "Field", "Old Value", "New Value");
-                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Name", oldData[1], newData[1]);
-                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Date of Birth", oldData[2], newData[2]);
-                    System.out.printf("| %-14s| %-27s| %-27s|\n", "Major", oldData[3], newData[3]);
-                    System.out.printf("| %-14s| %-27s| %-27s|\n", "GPA", oldData[4], newData[4].substring(0, newData[4].length() - 1)); //remove newline
-                    System.out.println("Are you sure you want to perform this update? (y/n)");
-                    String choice = in.nextLine();
-
-                    if (choice.equals("y")) {
-                        updated = true;
-                        fileContent.set(i, data);
-                    }
-                    break;
-                }
-            }
-
-            if (found && updated) {
-                Files.write(PATH, fileContent, StandardCharsets.UTF_8);
-                System.out.printf("Student with ID %d updated.\n", id);
-            } else if (found && !updated) {
-                System.out.printf("Student with ID %d not updated.\n", id);
-            } else {
-                System.out.printf("Student with ID %d not found.\n", id);
-            }
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-    }
-
-    /**
-     * Delete student by ID.
-     */
-    public static void deleteStudent(int id) {
-        if (id < 0) {
-            System.out.println("ID must be positive.");
-            return;
-        }
-        try {
-            List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            boolean found = false;
-            boolean deleted = false;
-
-            for (int i = 0; i < fileContent.size(); i++) {
-                String line = fileContent.get(i);
-                String idString = line.substring(0, line.indexOf(","));
-                if (Integer.parseInt(idString) == id) {
-                    found = true;
-                    String[] data = line.split(",");
-
-                    System.out.println("About to delete the following student:");
-                    System.out.printf("""
-                            ---------------------------------------------------------------------------------------
-                            ID: %s
-                            Name: %s
-                            Date of Birth: %s
-                            Major: %s
-                            GPA: %s
-                            """, data[0], data[1], data[2], data[3], data[4]);
-
-                    System.out.println("Are you sure you want to delete this student? (y/n)");
-                    String choice = in.nextLine();
-
-                    if (choice.equals("y")) {
-                        deleted = true;
-                        fileContent.remove(i);
-                    }
-                    break;
-                }
-            }
-
-            if (found && deleted) {
-                Files.write(PATH, fileContent, StandardCharsets.UTF_8);
-                System.out.printf("Student with ID %d deleted\n.", id);
-            } else if (found && !deleted) {
-                System.out.printf("Student with ID %d not deleted.\n", id);
-            } else {
-                System.out.printf("Student with ID %d not found.\n", id);
-            }
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-    }
-
-    /**
-     * Remove all empty lines from the file, and sort by ID.
-     */
-    public static void cleanFile() {
-        try {
-            List<String> fileContent = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            for (int i = 0; i < fileContent.size(); i++) {
-                if (fileContent.get(i).isEmpty()) {
-                    fileContent.remove(i);
-                    break;
-                }
-            }
-
-            fileContent.sort(Comparator.comparing(s -> Integer.parseInt(s.substring(0, s.indexOf(","))))); //sort by ID
-            Files.write(PATH, fileContent, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-    }
-
-    /**
-     * Helper function to read in data for a student (assumes ID has already been read)
-     *
-     * @return String with student data
-     */
-    public static String getStudentData() {
-        String data = "";
-        System.out.println("Please enter the student's name.");
-        String name = in.nextLine();
-        data += name + ",";
-        System.out.println("Please enter the student's date of birth.");
-        String dob = in.nextLine();
-        data += dob + ",";
-        System.out.println("Please enter the student's major.");
-        String major = in.nextLine();
-        data += major + ",";
-        System.out.println("Please enter the student's GPA.");
-        double gpa = in.nextDouble();
-        while (gpa < 0 || gpa > 4) {
-            System.out.println("GPA must be between 0 and 4. Please re-enter.");
-            gpa = in.nextDouble();
-        }
-        in.nextLine(); //consume newline
-        data += gpa + "\n";
-        return data;
-    }
-
-    /**
-     * Print all students in a formatted table.
-     */
-    public static void printAllStudents() {
-        try {
-            List<String> fileContents = new ArrayList<>(Files.readAllLines(PATH, StandardCharsets.UTF_8));
-            System.out.println("""
-                    Student Database:
-                    ---------------------------------------------------------------------------------------""");
-            System.out.printf("%-10s%-20s%-20s%-20s%-20s\n", "ID", "Name", "Date of Birth", "Major", "GPA");
-            for (String line : fileContents) {
-                String[] data = line.split(",");
-                System.out.printf("%-10s%-20s%-20s%-20s%-20s\n", data[0], data[1], data[2], data[3], data[4]);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-}
