@@ -246,6 +246,7 @@ public class StudentDataHandler {
                 Date of Birth: %s
                 Major: %s
                 GPA: %s
+                ---------------------------------------------------------------------------------------
                 """, data[0], data[1], data[2], data[3], data[4]);
 
         System.out.println("Are you sure you want to delete this student? (y/n)");
@@ -267,7 +268,8 @@ public class StudentDataHandler {
                 }
             }
 
-            fileContent.sort(Comparator.comparing(s -> Integer.parseInt(s.substring(0, s.indexOf(","))))); //sort by ID
+            fileContent.sort(Comparator.comparing(
+                    s -> Integer.parseInt(s.substring(0, s.indexOf(","))))); //sort by ID
             Files.write(PATH, fileContent, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -280,29 +282,42 @@ public class StudentDataHandler {
      * @return String with student data
      */
     private String getDataInput(int id) {
-        String data = id + ",";
-        System.out.println("Please enter the student's name.");
+        String[] dataArr = new String[5];
+
+        dataArr[0] = Integer.toString(id);
+
+        System.out.println("Please enter the student's first and last name.");
         String name = in.nextLine();
-        data += name + ",";
-        System.out.println("Please enter the student's date of birth.");
+        dataArr[1] = name;
+
+        System.out.println("Please enter the student's date of birth (yyyy-mm-dd).");
         String dob = in.nextLine();
-        data += dob + ",";
+        dataArr[2] = dob;
+
         System.out.println("Please enter the student's major.");
         String major = in.nextLine();
-        data += major + ",";
-        System.out.println("Please enter the student's GPA.");
+        dataArr[3] = major;
+
+        System.out.println("Please enter the student's GPA (0.0 - 4.0).");
         double gpa = in.nextDouble();
         while (gpa < 0 || gpa > 4) {
             System.out.println("GPA must be between 0 and 4. Please re-enter.");
             gpa = in.nextDouble();
         }
         in.nextLine(); //consume newline
-        data += gpa + "\n";
-        return data;
+        dataArr[4] = Double.toString(gpa);
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : dataArr) {
+            sb.append(s).append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1); //remove last comma
+        sb.append("\n"); //add newline
+        return sb.toString();
     }
 
     /**
-     * Print all students in a formatted table.
+     * Output all students in a formatted table.
      */
     public String getAllStudents() {
         try {
