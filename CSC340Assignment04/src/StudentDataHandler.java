@@ -12,6 +12,7 @@ public class StudentDataHandler {
     private final String PATH_STRING;
     private final Path PATH;
     final Scanner in;
+    final int test = 1;
 
     public StudentDataHandler(String pathString, Scanner in) {
         PATH_STRING = pathString;
